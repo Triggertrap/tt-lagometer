@@ -1,13 +1,12 @@
-  int focus = 9;
-  int shutter = 8; 
-  int auxport = A0; 
-  int val = 0; 
+  int focus = 9;               // 9 for TT Shield. 13 for TTv1
+  int shutter = 8;             // 8 for TT Shield. 12 for TTv1
+  int auxport = A0;            // A0 for TT Shield. A2 for TTv1
+
+  int val = 0;          
   String Preamble = ""; 
   boolean focuson   = true;  // if true, trigger normally. if false, engage shutter first. 
   boolean verbose   = false; // If true, only output results
   int exposurecount = 0; 
-  
-  
   int pfexposure = 0; 
   int pfexposurecount = 0; 
   int normalexposure = 0; 
