@@ -4,7 +4,15 @@
   int val = 0; 
   String Preamble = ""; 
   boolean focuson   = true;  // if true, trigger normally. if false, engage shutter first. 
-  boolean verbose   = true; // If true, only output results
+  boolean verbose   = false; // If true, only output results
+  int exposurecount = 0; 
+  
+  
+  int pfexposure = 0; 
+  int pfexposurecount = 0; 
+  int normalexposure = 0; 
+  int normalexposurecount = 0; 
+  
   
  unsigned long start, finish, duration;
  String LagDuration; 
@@ -20,68 +28,99 @@ void setup() {
   pinMode(shutter, OUTPUT); // Shutter  
   pinMode(auxport, INPUT); // AUX
   Serial.begin(9600);
+  Serial.println("\nStarting Lag-o-Meter...");
+  val = analogRead(auxport); 
+  delay(1000); 
+  val = analogRead(auxport); 
+  digitalWrite(focus, HIGH);
+  digitalWrite(shutter, HIGH);
 }
 
 
 void loop() {
-if (verbose)
+  exposurecount++; 
+  
+ if (exposurecount > 10)
+   {
+     focuson = false; 
+   }  
+ if (exposurecount == 11)
+   {
+    Serial.println("Average exposure with normal focus signal mode: " + String(normalexposure/normalexposurecount) + "ms\n");
+      int normalexposure = 0; 
+      int normalexposurecount = 0; 
+   }  
+ if (exposurecount > 20)
   {
-  Serial.println("\nWaiting for 3 seconds before triggering again...");
-  }
- delay(2500); // Wait for x ms
+    focuson = true;
+    exposurecount = 1; 
+    Serial.println("\nAverage exposure with pre-focused mode: " + String(pfexposure/pfexposurecount) + "ms\n");   
+    Serial.println("\n\nCompleted 20 exposures... Waiting 10 seconds");
+    int pfexposure = 0; 
+    int pfexposurecount = 0; 
+    delay(10000);
+  } 
+  
+ delay(1000); // Wait for x ms between shots
 
 if (focuson) 
   { 
-    if (verbose)
-      {
-        Serial.println("Triggering normally...");
-      }
   }
 else
  {
     digitalWrite(focus, LOW);
-    if (verbose)
-      {
-         Serial.println("Triggering with Focus already engaged...");
-      }
     delay(1000);     
-    if (verbose)
-    {
-      Serial.print(" NOW...");
-    }
  }
  
  boolean waiting = true; 
  
  start = micros();
  digitalWrite(focus, LOW);
- digitalWrite(shutter, LOW);
+ digitalWrite(shutter, LOW);    
 
- while(waiting){   
    val = analogRead(auxport); 
-   if (val < 100)
+ while(waiting){   
+   if (val < 150)
      {
        finish = micros();                       // Stop the clock!
        duration = finish - start ;              // Duration in microseconds 
        
-       String durationuS = String(duration); 
-       duration = duration / 1000; // From microseconds to milliseconds
-       String durationMS = String(duration); 
+      int durationMS = duration / 1000; // From microseconds to milliseconds
       
       if (focuson)
         {
-           Preamble = "Shutter Lag, measured in normal mode: ";
+           Preamble = "Shutter Lag, exposure " + String(exposurecount)  + " measured in normal mode: ";
+           normalexposure = normalexposure + durationMS;
+           normalexposurecount++;  
         }
        else
         {
-           Preamble = "Shutter Lag, measured in pre-focus mode: ";
+           Preamble = "Shutter Lag, exposure " + String(exposurecount)  + " measured in pre-focus mode: ";
+           pfexposure = pfexposure + durationMS; 
+           pfexposurecount++; 
         }
        
-       Serial.println(Preamble + " " + durationMS + "ms / " + durationuS + " microseconds" );
-       
+      if (durationMS > 3000)
+        {
+          Serial.println("Shutter lag was " + String(durationMS) + "ms, so let's ignore this one...\n" );
+          exposurecount = 0; 
+          int pfexposure = 0; 
+          int pfexposurecount = 0; 
+          int normalexposure = 0; 
+          int normalexposurecount = 0; 
+        }
+      else
+        {
+          Serial.println(Preamble + " " + String(durationMS) + "ms / " + String(duration) + " microseconds" );
+        }
        waiting = false; // Break out of while loop
      }
+  val = analogRead(auxport); 
+
 }
  digitalWrite(focus, HIGH);
  digitalWrite(shutter, HIGH);
+ 
+
+ 
 }
