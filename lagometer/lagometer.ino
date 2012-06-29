@@ -55,8 +55,10 @@ void loop() {
     exposurecount = 1; 
     Serial.println("\nAverage exposure with pre-focused mode: " + String(pfexposure/pfexposurecount) + "ms\n");   
     Serial.println("\n\nCompleted 20 exposures... Waiting 10 seconds");
-    int pfexposure = 0; 
-    int pfexposurecount = 0; 
+          int pfexposure = 0; 
+          int pfexposurecount = 0; 
+          int normalexposure = 0; 
+          int normalexposurecount = 0; 
     delay(10000);
   } 
   
